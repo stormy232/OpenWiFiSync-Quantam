@@ -38,7 +38,7 @@ esp_err_t timer_open(void) {
         ESP_ERROR_CHECK(gptimer_new_timer(&cfg, &gptimerRisingEdge));
         gptimer_alarm_config_t alarm = {
             .alarm_count          = TOGGLE_DELAY_US,
-            .flags.auto_reload_on_alarm = false,
+            .flags.auto_reload_on_alarm = false, //One Shot Alarm
         };
         ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimerRisingEdge, &alarm));
         gptimer_event_callbacks_t cb = { .on_alarm = isr_oneshot_rising };

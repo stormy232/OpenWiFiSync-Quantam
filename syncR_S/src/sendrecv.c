@@ -35,6 +35,8 @@ static uint8_t send_filterBuffer[MAXIMUM_MESSAGE_SIZE];
 static uint8_t incoming_data[2048];
 static double filterBuf[FILTER_WINDOW_SIZE];
 static S_packet_t sPacket[sPacketBUFFERSIZE] = { 0 };
+
+//Identifies NIC - Manufacturer first half of NIC MAC
 static const uint8_t DFKI_OUI[3] = { 0x19, 0x88, 0x42 };
 
 static QueueHandle_t timeQueue = NULL;
@@ -82,6 +84,8 @@ uint32_t btea(uint32_t* v, ssize_t n, uint32_t* k) {
 }
 #endif
 
+
+//See Master Notes for this
 static esp_err_t wifi_send_raw(const uint8_t *dest_address, void *data, int len) {
     if (!tx_setup_done_once) {
         memset(raw_frame, 0, sizeof(raw_frame));
@@ -171,9 +175,10 @@ void wifi_rx_cb(void *filterBuf, wifi_promiscuous_pkt_type_t type) {
             gptimer_get_raw_count(gptimer, &myTime);
 
             countArray++;
+            //Wrap Value
             if (countArray >= sPacketBUFFERSIZE)
                 countArray = 0;
-
+            //Count 
             sPacket[countArray].count = apSeq;
             sPacket[countArray].timeAP = apTime;
             sPacket[countArray].timeS = myTime;
@@ -271,11 +276,11 @@ void wifi_rx_cb(void *filterBuf, wifi_promiscuous_pkt_type_t type) {
         MtoS_packet_t mPacket = *(MtoS_packet_t*)(data_in_recv_cb->payload);
 
         if (setup_done) {
-            if ((sPacket[countArray].count == mPacket.count) && (sPacket[countArray].timeAP == mPacket.timeAP)) {
+            if ((sPacket[countArray].count == mPacket.count) && (sPacket[countArray].timeAP == mPacket.timeAP)) { //timeAP check may be redundant in all honestly extra sec Ig
                 sPacket[countArray].timeM = mPacket.timeM;
                 sPacket[countArray].offset = sPacket[countArray].timeM - sPacket[countArray].timeS;
 
-                if ((sPacket[countArray].timeS != 0) && (sPacket[countArray].timeM != 0)) {
+                if ((sPacket[countArray].timeS != 0) && (sPacket[countArray].timeM != 0)) { //offset calc
                     xQueueSend(timeQueue, &countArray, portMAX_DELAY);
                 }
 
@@ -359,19 +364,21 @@ void calc_drift_task(void *pvParameter) {
         }
 
         if (count > 0) {
-            dividend = sPacket[count].offset - sPacket[count-1].offset;
-            divisor  = sPacket[count].timeM - sPacket[count-1].timeM;
+            dividend = sPacket[count].offset - sPacket[count-1].offset; //(s2-m2) - (s1-m1)
+            divisor  = sPacket[count].timeM - sPacket[count-1].timeM; //(t2-t1)
             sPacket[count].drift_unfiltered_ppm = dividend / divisor * 1.0e6;
 
         } else if (count == 0) {
+            //We have to implement this due to wraparound
             dividend = sPacket[count].offset - sPacket[sPacketBUFFERSIZE - 1].offset;
             divisor  = sPacket[count].timeM - sPacket[sPacketBUFFERSIZE - 1].timeM;
             sPacket[count].drift_unfiltered_ppm = dividend / divisor * 1.0e6;
         }
-
+        //Keeps only latest 1024 latest samples
         sPacket[count].drift_filtered_ppm = ma_filter_add(sPacket[count].drift_unfiltered_ppm);
         timer_open();
 
+        //I believe this is when master sends out signal gen 
         uint64_t toggle_time = sPacket[count].timeM + TOGGLE_DELAY_US;
         gptimer_get_raw_count(gptimer, &timeNow);
         uint64_t ttt = toggle_time + sPacket[count].offset - timeNow;                // * time left until toggle
