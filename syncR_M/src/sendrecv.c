@@ -199,6 +199,7 @@ void wifi_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type) {
 
 void send_data(uint8_t *dest_mac, void *data, msg_type_t msg_type,
                uint16_t len) {
+  ESP_LOGI(TAG, "send_data was called");
   uint8_t toBeAdded = 0;
   uint8_t my_index = 0;
 

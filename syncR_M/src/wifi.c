@@ -57,11 +57,9 @@ void wifi_init_sta(void) {
   ESP_ERROR_CHECK(esp_event_handler_instance_register(
       IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
 
+  printf("%s\n",WIFI_PASSWORD);
   wifi_config_t wifi_config = {
-      .sta =
-          {
-              .ssid = WIFI_SSID,
-          },
+      .sta = {.ssid = WIFI_SSID, .password = ""},
   };
   esp_wifi_config_80211_tx_rate(ESP_IF_WIFI_STA, wifi_rate);
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));

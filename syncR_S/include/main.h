@@ -24,7 +24,8 @@
 #define MX (((z >> 5) ^ (y << 2)) + ((y >> 3) ^ (z << 4))) ^ ((sum ^ y) + (k[(p&3) ^ e] ^ z))
 
 // * Wi-Fi specific defines
-#define WIFI_SSID "linksys"
+#define WIFI_SSID "Pixel_6085"
+#define WIFI_PASSWORD "260195007"
 #define WIFI_CHANNEL 11
 #define VENDOR_SPECIFIC_TAG_NUMBER 221
 #define WIFI_PACKET_FIXED_SIZE 32

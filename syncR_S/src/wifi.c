@@ -66,6 +66,7 @@ void wifi_init_sta(void) {
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = WIFI_SSID,
+            .password = WIFI_PASSWORD,
         },
     };
     esp_wifi_config_80211_tx_rate(ESP_IF_WIFI_STA, wifi_rate);
