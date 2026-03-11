@@ -4,6 +4,8 @@
 #include "driver/gpio.h"
 #include "esp_timer.h"
 #include "rom/ets_sys.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #define GPIO_M 4
 #define GPIO_S 2
@@ -15,7 +17,6 @@ static volatile int64_t tS_last = -1;
 static volatile int64_t count  = 0;
 
 static volatile bool waitM  = false;
-
 
 static void isr_master(void *arg) {
     const int64_t now = esp_timer_get_time();
@@ -72,4 +73,5 @@ void app_main(void) {
     init_input(GPIO_S, isr_slave,  true);
 
     ets_printf("Watching GPIO %d (M) and %d (S)…\n", GPIO_M, GPIO_S);
+    vTaskDelay(portMAX_DELAY);  // add this
 }

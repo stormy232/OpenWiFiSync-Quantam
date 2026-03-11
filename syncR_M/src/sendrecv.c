@@ -144,17 +144,17 @@ static esp_err_t wifi_send_raw(const uint8_t *dest_address, void *data,
 }
 
 void wifi_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type) {
-  //Wifi packet sniffing so capturing surrounding wifi signals
+  // Wifi packet sniffing so capturing surrounding wifi signals
   /*
-  wifi_pkt_rx_ctrl_t rx_ctrl;  < metadata header 
-    uint8_t payload[0];        Data or management frame payload. Length of payload is
-                                min(112, (pkt->rx_ctrl.sig_mode ? pkt->rx_ctrl.HT_length : pkt->rx_ctrl.legacy_length))
-                                Type of content determined by packet type argument of callback.
+  wifi_pkt_rx_ctrl_t rx_ctrl;  < metadata header
+    uint8_t payload[0];        Data or management frame payload. Length of
+  payload is min(112, (pkt->rx_ctrl.sig_mode ? pkt->rx_ctrl.HT_length :
+  pkt->rx_ctrl.legacy_length)) Type of content determined by packet type
+  argument of callback.
    */
-  
 
   wifi_promiscuous_pkt_t *pkt = (wifi_promiscuous_pkt_t *)buf;
-  uint8_t *raw_wifi_packet = pkt->payload; //actual data
+  uint8_t *raw_wifi_packet = pkt->payload; // actual data
 
   uint8_t first_byte = raw_wifi_packet[0];
 
@@ -176,14 +176,16 @@ void wifi_rx_cb(void *buf, wifi_promiscuous_pkt_type_t type) {
 
       uint64_t myTime = 0;
 
-      //Count Val Since timer started
+      // Count Val Since timer started
       gptimer_get_raw_count(gptimer, &myTime);
       MtoS_packet_t mPacket;
-      mPacket.count = apSeq; //I think this is T1 or T2 (what packet we are on in seq)
-      mPacket.timeM = myTime; //Master Time
-      mPacket.timeAP = apTime; //Slave Time
+      mPacket.count =
+          apSeq; // I think this is T1 or T2 (what packet we are on in seq)
+      mPacket.timeM = myTime;  // Master Time
+      mPacket.timeAP = apTime; // Slave Time
 
-      //This registers some sort of pulse for a little while (think this is for testing timing w/ oscillator)
+      // This registers some sort of pulse for a little while (think this is for
+      // testing timing w/ oscillator)
       timer_open();
       gptimer_set_raw_count(gptimerRisingEdge, 0);
       gptimer_start(gptimerRisingEdge);
@@ -233,7 +235,8 @@ void send_data(uint8_t *dest_mac, void *data, msg_type_t msg_type,
 
   memcpy(send_buffer, enc_send_data, data_length + toBeAdded);
 #endif
-//Above we just set crc and data into buffer then wifi_send_raw constructs raw beacon frame
+  // Above we just set crc and data into buffer then wifi_send_raw constructs
+  // raw beacon frame
   if (wifi_send_raw(dest_mac, send_buffer, data_length + toBeAdded) != ESP_OK) {
     ESP_LOGE(TAG, "Send error: dest:" MACSTR "", MAC2STR(dest_mac));
   }
@@ -255,7 +258,7 @@ void sendTask(void *pvParameter) {
   MtoS_packet_t timePacket;
 
   while (xQueueReceive(sendQueue, &timePacket, portMAX_DELAY)) {
-    //Keep running until Queue points to null, ie: queue doesn't exist
+    // Keep running until Queue points to null, ie: queue doesn't exist
     vTaskDelay(5 / portTICK_PERIOD_MS);
 
     send_data(s_broadcast_mac, &timePacket, FOLLOW_UP, sizeof(MtoS_packet_t));
